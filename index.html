@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Awesome List Generator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Awesome List Generator</h1>
+    <div class="actions">
+      <button id="newBtn" title="Ctrl+N">New</button>
+      <button id="loadBtn" title="Ctrl+L">Load</button>
+      <button id="saveBtn" title="Ctrl+S">Save</button>
+      <button id="exportMdBtn" title="Ctrl+M">Export MD</button>
+      <button id="exportHtmlBtn" title="Ctrl+E">Export HTML</button>
+      <label for="csvInput" class="csv-btn" title="Import CSV">Import CSV</label>
+      <input type="file" id="csvInput" accept=".csv,text/csv" hidden>
+    </div>
+  </header>
+
+  <main class="app">
+    <section class="panel editor" id="editor">
+      <div class="panel-head">
+        <span>Entries</span>
+        <span id="entryCount" class="count">0</span>
+      </div>
+      <div class="toolbar">
+        <input id="search" placeholder="🔍 Filter entries..." />
+        <button id="addSectionBtn">+ Section</button>
+      </div>
+      <div id="sectionsContainer"></div>
+    </section>
+
+    <section class="panel preview">
+      <div class="panel-head">Live Preview</div>
+      <div id="preview"></div>
+    </section>
+
+    <section class="panel output">
+      <div class="panel-head">Export</div>
+      <select id="exportFormat">
+        <option value="md">Markdown</option>
+        <option value="html">GitHub Pages HTML</option>
+      </select>
+      <textarea id="output" readonly placeholder="Export ready..."></textarea>
+      <div class="output-actions">
+        <button id="copyBtn">Copy</button>
+        <a id="downloadBtn" download>Download</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
