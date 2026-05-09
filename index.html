@@ -1,57 +1,1274 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Awesome List Generator</title>
-  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module" id="pdfjs-script"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f9fafb;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --border-focus: #6b7280;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --text-light: #9ca3af;
+      --primary: #111827;
+      --primary-fg: #f9fafb;
+      --accent: #2563eb;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --success: #16a34a;
+      --tag-bg: #f3f4f6;
+      --tag-text: #374151;
+      --hover: #f3f4f6;
+      --radius: 8px;
+      --radius-sm: 5px;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -1px rgba(0,0,0,.05);
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --mono: 'Menlo', 'Monaco', 'Courier New', monospace;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-badge {
+      width: 32px;
+      height: 32px;
+      background: var(--primary);
+      color: var(--primary-fg);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 11px;
+      font-family: var(--mono);
+      letter-spacing: -.5px;
+    }
+
+    .logo-text h1 { font-size: 15px; font-weight: 700; line-height: 1.2; }
+    .logo-text p  { font-size: 11px; color: var(--text-muted); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-family: var(--font);
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background .12s, border-color .12s, opacity .12s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary   { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+    .btn-primary:hover { opacity: .88; }
+    .btn-outline   { background: var(--surface); color: var(--text); border-color: var(--border); }
+    .btn-outline:hover { background: var(--hover); }
+    .btn-ghost     { background: transparent; color: var(--text); border-color: transparent; }
+    .btn-ghost:hover { background: var(--hover); }
+    .btn-danger    { background: var(--danger-light); color: var(--danger); border-color: transparent; }
+    .btn-danger:hover { opacity: .85; }
+    .btn-sm        { padding: 4px 10px; font-size: 12px; }
+    .btn-icon      { padding: 5px; width: 30px; height: 30px; justify-content: center; }
+    .btn:disabled  { opacity: .45; cursor: not-allowed; }
+
+    /* ── Layout ── */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding: 16px 20px;
+      min-height: 0;
+      height: calc(100vh - 57px);
+    }
+
+    @media (max-width: 800px) {
+      main { grid-template-columns: 1fr; height: auto; }
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ── Tabs ── */
+    .tabs-nav {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      flex-shrink: 0;
+      padding: 6px;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font);
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background .12s, color .12s;
+    }
+
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: var(--shadow);
+    }
+
+    .tab-btn:hover:not(.active) { background: rgba(0,0,0,.04); }
+
+    .tab-panel { display: none; flex: 1; overflow-y: auto; padding: 16px; }
+    .tab-panel.active { display: flex; flex-direction: column; gap: 14px; }
+
+    /* ── Form ── */
+    .form-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: var(--surface);
+    }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    label .req { color: var(--danger); }
+
+    input[type="text"],
+    input[type="url"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-family: var(--font);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border-color .12s;
+    }
+
+    input:focus, textarea:focus, select:focus { border-color: var(--border-focus); }
+
+    textarea { resize: vertical; min-height: 120px; font-family: var(--mono); font-size: 12px; }
+
+    .form-footer { display: flex; justify-content: flex-end; margin-top: 4px; }
+
+    .category-wrap { display: flex; gap: 8px; }
+    .category-wrap input { flex: 1; }
+
+    /* ── Entry List ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0 4px;
+      border-top: 1px solid var(--border);
+    }
+
+    .section-header h3 { font-size: 14px; font-weight: 600; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--tag-bg);
+      color: var(--tag-text);
+    }
+
+    .entry-row {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      transition: border-color .12s;
+    }
+
+    .entry-row:hover { border-color: var(--border-focus); }
+    .entry-row:hover .entry-actions { opacity: 1; }
+
+    .entry-info { flex: 1; min-width: 0; }
+
+    .entry-title {
+      font-weight: 600;
+      color: var(--accent);
+      font-size: 13px;
+      text-decoration: none;
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .entry-title:hover { text-decoration: underline; }
+    .entry-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    .entry-actions {
+      display: flex;
+      gap: 2px;
+      opacity: 0;
+      transition: opacity .12s;
+      flex-shrink: 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 20px;
+      color: var(--text-muted);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      font-size: 13px;
+    }
+
+    /* ── Edit row ── */
+    .edit-row {
+      border: 1px solid var(--border-focus);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: var(--hover);
+    }
+
+    .edit-row .form-row { gap: 8px; }
+    .edit-actions { display: flex; justify-content: flex-end; gap: 6px; }
+
+    /* ── Import ── */
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+
+    .dropzone.drag-over {
+      border-color: var(--accent);
+      background: rgba(37,99,235,.04);
+    }
+
+    .dropzone-icon { font-size: 32px; margin-bottom: 10px; }
+    .dropzone h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .dropzone p { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+
+    .format-tags {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .format-tag {
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--tag-bg);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .import-preview {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .import-preview-header {
+      padding: 10px 14px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .import-preview-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .import-preview-item {
+      padding: 8px 14px;
+      font-size: 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .import-preview-item:last-child { border-bottom: none; }
+    .import-preview-item .item-title { font-weight: 600; }
+    .import-preview-item .item-url { color: var(--text-muted); font-size: 11px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .import-more { padding: 8px 14px; font-size: 12px; color: var(--text-muted); text-align: center; border-top: 1px solid var(--border); }
+
+    .import-actions { display: flex; gap: 8px; padding: 10px 0 0; }
+    .import-actions .btn { flex: 1; justify-content: center; }
+
+    /* ── Template ── */
+    .template-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .template-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .template-hint code {
+      background: var(--tag-bg);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-family: var(--mono);
+    }
+
+    /* ── Preview ── */
+    .preview-panel { flex-direction: column; }
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .preview-header h2 { font-size: 15px; font-weight: 600; }
+
+    .export-btns { display: flex; align-items: center; gap: 6px; }
+
+    .export-icon-group {
+      display: flex;
+      gap: 2px;
+      background: var(--tag-bg);
+      padding: 4px;
+      border-radius: var(--radius-sm);
+    }
+
+    .export-icon-group .btn-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+    }
+
+    .preview-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 36px;
+      background: #ffffff;
+      min-height: 0;
+    }
+
+    /* ── GitHub-style Markdown preview ── */
+    .md-preview { max-width: 760px; margin: 0 auto; color: #24292f; font-family: var(--font); }
+    .md-preview h1 { font-size: 2em; font-weight: 700; border-bottom: 1px solid #d0d7de; padding-bottom: .3em; margin-bottom: .8em; }
+    .md-preview h2 { font-size: 1.5em; font-weight: 600; border-bottom: 1px solid #d0d7de; padding-bottom: .3em; margin: 1.4em 0 .6em; }
+    .md-preview h3 { font-size: 1.25em; font-weight: 600; margin: 1.2em 0 .5em; }
+    .md-preview p  { margin-bottom: .8em; line-height: 1.6; }
+    .md-preview ul { padding-left: 1.4em; margin-bottom: .8em; }
+    .md-preview li { margin-bottom: .35em; line-height: 1.6; }
+    .md-preview a  { color: #0969da; text-decoration: none; }
+    .md-preview a:hover { text-decoration: underline; }
+    .md-preview blockquote { border-left: 4px solid #d0d7de; padding-left: 16px; color: #57606a; margin: .8em 0; }
+    .md-preview code { background: rgba(175,184,193,.2); padding: .2em .4em; border-radius: 6px; font-family: var(--mono); font-size: 85%; }
+    .md-preview pre { background: #f6f8fa; padding: 16px; border-radius: 6px; overflow-x: auto; margin-bottom: .8em; }
+    .md-preview pre code { background: none; padding: 0; }
+    .md-preview hr { border: none; border-top: 1px solid #d0d7de; margin: 1.5em 0; }
+
+    /* ── Toast ── */
+    #toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--primary);
+      color: var(--primary-fg);
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-md);
+      animation: slideIn .2s ease;
+      max-width: 300px;
+    }
+
+    .toast.error { background: var(--danger); }
+
+    @keyframes slideIn {
+      from { transform: translateY(12px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0,0,0,.2);
+      border-top-color: var(--text);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── SVG Icons ── */
+    .icon { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+    /* ── Misc ── */
+    .text-muted { color: var(--text-muted); }
+    .text-danger { color: var(--danger); }
+    .text-blue  { color: #2563eb; }
+    .text-green { color: #16a34a; }
+    .text-orange{ color: #ea580c; }
+    .gap-2 { gap: 8px; }
+    .flex { display: flex; align-items: center; }
+    .hidden { display: none !important; }
+    .w-full { width: 100%; }
+    .justify-center { justify-content: center; }
+    .mt-2 { margin-top: 8px; }
+    .mt-4 { margin-top: 16px; }
+  </style>
+<base target="_blank">
 </head>
 <body>
-  <header class="topbar">
-    <h1>Awesome List Generator</h1>
-    <div class="actions">
-      <button id="newBtn" title="Ctrl+N">New</button>
-      <button id="loadBtn" title="Ctrl+L">Load</button>
-      <button id="saveBtn" title="Ctrl+S">Save</button>
-      <button id="exportMdBtn" title="Ctrl+M">Export MD</button>
-      <button id="exportHtmlBtn" title="Ctrl+E">Export HTML</button>
-      <label for="csvInput" class="csv-btn" title="Import CSV">Import CSV</label>
-      <input type="file" id="csvInput" accept=".csv,text/csv" hidden>
+
+<!-- ═══════════════════════════ HEADER ═══════════════════════════ -->
+<header>
+  <div class="logo">
+    <div class="logo-badge">AL</div>
+    <div class="logo-text">
+      <h1>Awesome List Gen</h1>
+      <p>Power tool for curators</p>
     </div>
-  </header>
+  </div>
+  <button class="btn btn-ghost btn-sm" id="btn-clear">Clear Data</button>
+</header>
 
-  <main class="app">
-    <section class="panel editor" id="editor">
-      <div class="panel-head">
-        <span>Entries</span>
-        <span id="entryCount" class="count">0</span>
+<!-- ═══════════════════════════ MAIN ═════════════════════════════ -->
+<main>
+  <!-- LEFT PANEL: Editor -->
+  <div class="panel">
+    <nav class="tabs-nav">
+      <button class="tab-btn active" data-tab="entries">
+        <svg class="icon" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Entries
+      </button>
+      <button class="tab-btn" data-tab="import">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Import
+      </button>
+      <button class="tab-btn" data-tab="template">
+        <svg class="icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        Template
+      </button>
+    </nav>
+
+    <!-- ENTRIES TAB -->
+    <div id="tab-entries" class="tab-panel active">
+      <!-- Entry Form -->
+      <div class="form-card">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-title">Title <span class="req">*</span></label>
+            <input type="text" id="f-title" placeholder="e.g. React" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label for="f-url">URL <span class="req">*</span></label>
+            <input type="url" id="f-url" placeholder="https://..." autocomplete="off" />
+          </div>
+        </div>
+        <div class="form-group mt-2">
+          <label for="f-desc">Description</label>
+          <input type="text" id="f-desc" placeholder="A JavaScript library for building user interfaces" autocomplete="off" />
+        </div>
+        <div class="form-group mt-2">
+          <label for="f-cat">Category</label>
+          <div class="category-wrap">
+            <input type="text" id="f-cat" placeholder="e.g. Frontend Frameworks" list="cat-datalist" autocomplete="off" />
+            <datalist id="cat-datalist"></datalist>
+            <button class="btn btn-primary" id="btn-add-entry">Add Entry</button>
+          </div>
+        </div>
       </div>
-      <div class="toolbar">
-        <input id="search" placeholder="🔍 Filter entries..." />
-        <button id="addSectionBtn">+ Section</button>
+
+      <!-- Entry List -->
+      <div id="entry-list-root"></div>
+    </div>
+
+    <!-- IMPORT TAB -->
+    <div id="tab-import" class="tab-panel">
+      <div id="dropzone" class="dropzone">
+        <div class="dropzone-icon">☁️</div>
+        <h3>Drag and drop file to import</h3>
+        <p>Supports CSV, TXT, and PDF</p>
+        <div class="format-tags">
+          <span class="format-tag">📊 CSV — Title, URL, Desc, Cat</span>
+          <span class="format-tag">📄 TXT — Tab or comma separated</span>
+          <span class="format-tag">📑 PDF — Auto-extract URLs</span>
+        </div>
+        <button class="btn btn-outline" id="browse-btn">Browse Files</button>
+        <input type="file" id="file-input" accept=".csv,.txt,.pdf" class="hidden" />
       </div>
-      <div id="sectionsContainer"></div>
-    </section>
+      <div id="import-preview-root"></div>
+    </div>
 
-    <section class="panel preview">
-      <div class="panel-head">Live Preview</div>
-      <div id="preview"></div>
-    </section>
-
-    <section class="panel output">
-      <div class="panel-head">Export</div>
-      <select id="exportFormat">
-        <option value="md">Markdown</option>
-        <option value="html">GitHub Pages HTML</option>
-      </select>
-      <textarea id="output" readonly placeholder="Export ready..."></textarea>
-      <div class="output-actions">
-        <button id="copyBtn">Copy</button>
-        <a id="downloadBtn" download>Download</a>
+    <!-- TEMPLATE TAB -->
+    <div id="tab-template" class="tab-panel">
+      <div class="template-header">
+        <label style="font-size:13px;font-weight:600">Markdown Template</label>
+        <button class="btn btn-outline btn-sm" id="btn-load-template">
+          <svg class="icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Load .md File
+        </button>
+        <input type="file" id="template-file-input" accept=".md,.markdown,.txt" class="hidden" />
       </div>
-    </section>
-  </main>
+      <p class="template-hint">Use headings (<code>## Category Name</code>) to define where entries should slot in. Entries are matched by category name and inserted under their heading.</p>
+      <textarea id="template-editor" style="flex:1;min-height:340px"></textarea>
+    </div>
+  </div>
 
-  <script src="app.js"></script>
+  <!-- RIGHT PANEL: Preview & Export -->
+  <div class="panel preview-panel">
+    <div class="preview-header">
+      <h2>Live Preview</h2>
+      <div class="export-btns">
+        <button class="btn btn-outline btn-sm" id="btn-copy-md" title="Copy Markdown to clipboard">
+          <svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy MD
+        </button>
+        <div class="export-icon-group">
+          <button class="btn btn-ghost btn-icon text-blue" id="btn-export-md" title="Download README.md">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </button>
+          <button class="btn btn-ghost btn-icon text-green" id="btn-export-csv" title="Download CSV">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+          </button>
+          <button class="btn btn-ghost btn-icon text-orange" id="btn-export-html" title="Download HTML">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="preview-body">
+      <div class="md-preview" id="md-preview"></div>
+    </div>
+  </div>
+</main>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- ═══════════════════════════ JAVASCRIPT ════════════════════════ -->
+<script>
+  // ════════════════════════════════════════════════════════════════
+  // STATE
+  // ════════════════════════════════════════════════════════════════
+  const ENTRIES_KEY  = "alg-entries";
+  const TEMPLATE_KEY = "alg-template";
+
+  const DEFAULT_TEMPLATE = `# Awesome List
+
+A curated list of awesome things.
+
+## 🧠 Resources
+
+## 🛠️ Frameworks
+
+## 📚 Tutorials
+`;
+
+  let entries = [];
+  let pendingImport = [];
+  let editingId = null;
+
+  // ════════════════════════════════════════════════════════════════
+  // PERSISTENCE
+  // ════════════════════════════════════════════════════════════════
+  function loadEntries() {
+    try { return JSON.parse(localStorage.getItem(ENTRIES_KEY) || "[]"); }
+    catch { return []; }
+  }
+
+  function saveEntries() {
+    localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
+  }
+
+  function loadTemplate() {
+    return localStorage.getItem(TEMPLATE_KEY) || DEFAULT_TEMPLATE;
+  }
+
+  function saveTemplateToStorage() {
+    localStorage.setItem(TEMPLATE_KEY, document.getElementById("template-editor").value);
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // UTILITIES
+  // ════════════════════════════════════════════════════════════════
+  function uuid() {
+    return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now();
+  }
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+
+  function toast(msg, isError) {
+    const el = document.createElement("div");
+    el.className = "toast" + (isError ? " error" : "");
+    el.textContent = msg;
+    document.getElementById("toast-container").appendChild(el);
+    setTimeout(function() { el.remove(); }, 3000);
+  }
+
+  function updateClearBtn() {
+    document.getElementById("btn-clear").disabled = entries.length === 0;
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // TAB SWITCHING
+  // ════════════════════════════════════════════════════════════════
+  function switchTab(name, btn) {
+    document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
+    document.querySelectorAll(".tab-btn").forEach(function(b) { b.classList.remove("active"); });
+    document.getElementById("tab-" + name).classList.add("active");
+    btn.classList.add("active");
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // ENTRY CRUD
+  // ════════════════════════════════════════════════════════════════
+  function addEntry() {
+    const title = document.getElementById("f-title").value.trim();
+    const url   = document.getElementById("f-url").value.trim();
+    const desc  = document.getElementById("f-desc").value.trim();
+    const cat   = document.getElementById("f-cat").value.trim() || "Uncategorized";
+
+    if (!title || !url) { toast("Title and URL are required.", true); return; }
+
+    entries.push({ id: uuid(), title: title, url: url, description: desc, category: cat });
+    saveEntries();
+    document.getElementById("f-title").value = "";
+    document.getElementById("f-url").value   = "";
+    document.getElementById("f-desc").value  = "";
+    renderEntryList();
+    renderPreview();
+    updateClearBtn();
+    toast("Entry added.");
+  }
+
+  function deleteEntry(id) {
+    entries = entries.filter(function(e) { return e.id !== id; });
+    saveEntries();
+    if (editingId === id) editingId = null;
+    renderEntryList();
+    renderPreview();
+    updateClearBtn();
+  }
+
+  function startEdit(id) {
+    editingId = id;
+    renderEntryList();
+  }
+
+  function cancelEdit() {
+    editingId = null;
+    renderEntryList();
+  }
+
+  function saveEdit(id) {
+    const t = document.getElementById("edit-title-" + id);
+    const u = document.getElementById("edit-url-"   + id);
+    const d = document.getElementById("edit-desc-"  + id);
+    const c = document.getElementById("edit-cat-"   + id);
+
+    const title = t ? t.value.trim() : "";
+    const url   = u ? u.value.trim() : "";
+    const desc  = d ? d.value.trim() : "";
+    const cat   = c ? c.value.trim() : "";
+
+    if (!title || !url) { toast("Title and URL are required.", true); return; }
+
+    entries = entries.map(function(e) {
+      if (e.id === id) {
+        return { id: e.id, title: title, url: url, description: desc, category: cat || "Uncategorized" };
+      }
+      return e;
+    });
+    saveEntries();
+    editingId = null;
+    renderEntryList();
+    renderPreview();
+    toast("Entry updated.");
+  }
+
+  function clearAllData() {
+    if (!entries.length) return;
+    if (!confirm("Clear all entries? This cannot be undone.")) return;
+    entries = [];
+    saveEntries();
+    renderEntryList();
+    renderPreview();
+    updateClearBtn();
+    toast("All entries cleared.");
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // RENDER ENTRY LIST
+  // ════════════════════════════════════════════════════════════════
+  function renderEntryList() {
+    const root = document.getElementById("entry-list-root");
+    const cats = [...new Set(entries.map(function(e) { return e.category; }))].sort();
+
+    document.getElementById("cat-datalist").innerHTML = cats.map(function(c) {
+      return '<option value="' + esc(c) + '"/>';
+    }).join("");
+
+    if (entries.length === 0) {
+      root.innerHTML = '<div class="empty-state">No entries yet. Add one above or import from a file.</div>';
+      return;
+    }
+
+    let html = "";
+    cats.forEach(function(cat) {
+      const catEntries = entries.filter(function(e) { return e.category === cat; })
+        .sort(function(a,b) { return a.title.localeCompare(b.title); });
+      html += '<div class="section-header"><h3>' + esc(cat) + '</h3><span class="badge">' + catEntries.length + '</span></div>';
+      catEntries.forEach(function(e) {
+        if (editingId === e.id) {
+          html += 
+            '<div class="edit-row">' +
+            '<div class="form-row">' +
+            '<input type="text" id="edit-title-' + e.id + '" value="' + esc(e.title) + '" placeholder="Title" />' +
+            '<input type="url"  id="edit-url-' + e.id + '"   value="' + esc(e.url) + '"   placeholder="URL" />' +
+            '</div>' +
+            '<div class="form-row">' +
+            '<input type="text" id="edit-desc-' + e.id + '"  value="' + esc(e.description) + '" placeholder="Description" />' +
+            '<input type="text" id="edit-cat-' + e.id + '"   value="' + esc(e.category) + '"    placeholder="Category" />' +
+            '</div>' +
+            '<div class="edit-actions">' +
+            '<button class="btn btn-outline btn-sm" onclick="cancelEdit()">Cancel</button>' +
+            '<button class="btn btn-primary btn-sm" onclick="saveEdit('' + e.id + '')">Save</button>' +
+            '</div>' +
+            '</div>';
+        } else {
+          html += 
+            '<div class="entry-row">' +
+            '<div class="entry-info">' +
+            '<a class="entry-title" href="' + esc(e.url) + '" target="_blank" rel="noreferrer">' + esc(e.title) + '</a>' +
+            (e.description ? '<div class="entry-desc">' + esc(e.description) + '</div>' : "") +
+            '</div>' +
+            '<div class="entry-actions">' +
+            '<button class="btn btn-ghost btn-icon" onclick="startEdit('' + e.id + '')" title="Edit">' +
+            '<svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+            '</button>' +
+            '<button class="btn btn-ghost btn-icon text-danger" onclick="deleteEntry('' + e.id + '')" title="Delete">' +
+            '<svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>' +
+            '</button>' +
+            '</div>' +
+            '</div>';
+        }
+      });
+    });
+    root.innerHTML = html;
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // CSV PARSER
+  // ════════════════════════════════════════════════════════════════
+  const CSV_HEADER_TITLES = ["title", "name"];
+  const CSV_HEADER_URLS   = ["url", "link", "href"];
+
+  function parseCsv(text) {
+    const lines = text.split(/\r?\n/).filter(function(l) { return l.trim(); });
+    const results = [];
+
+    let startIndex = 0;
+    if (lines.length > 0) {
+      const firstCell = (lines[0].match(/^"?([^",\r\n]*)"?/) || ["", ""])[1].trim().toLowerCase();
+      if (CSV_HEADER_TITLES.indexOf(firstCell) !== -1 || CSV_HEADER_URLS.indexOf(firstCell) !== -1) startIndex = 1;
+    }
+
+    for (let li = startIndex; li < lines.length; li++) {
+      const line = lines[li];
+      const regex = /(?:^|,)(?:"([^"]*)"|([^,]*))/g;
+      const row = [];
+      let m;
+      while ((m = regex.exec(line))) {
+        if (m.index === regex.lastIndex) regex.lastIndex++;
+        row.push(m[1] !== undefined ? m[1] : (m[2] || ""));
+      }
+      while (row.length > 4 && row[row.length - 1] === "") row.pop();
+      const title = row[0] || "";
+      const url   = row[1] || "";
+      const description = row[2] || "";
+      const category    = row[3] || "";
+      if (title && url) results.push({ title: title.trim(), url: url.trim(), description: description.trim(), category: category.trim() || "Uncategorized" });
+    }
+    return results;
+  }
+
+  function parseTxt(text) {
+    const lines = text.split(/\r?\n/).filter(function(l) { return l.trim(); });
+    const results = [];
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const parts = line.indexOf("\t") !== -1 ? line.split("\t") : line.split(",");
+      if (parts.length >= 2) {
+        const title = parts[0] || "";
+        const url   = parts[1] || "";
+        const description = parts[2] || "";
+        const category    = parts[3] || "";
+        results.push({ title: title.trim(), url: url.trim(), description: description.trim(), category: category.trim() || "Uncategorized" });
+      }
+    }
+    return results;
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // PDF PARSER (pdf.js via CDN)
+  // ════════════════════════════════════════════════════════════════
+  async function parsePdf(file) {
+    // Use the global pdfjsLib from the script tag, or load it dynamically
+    let pdfjsLib;
+    if (typeof window.pdfjsLib !== "undefined") {
+      pdfjsLib = window.pdfjsLib;
+    } else {
+      // Fallback: try dynamic import if available
+      try {
+        pdfjsLib = await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs");
+      } catch (e) {
+        throw new Error("PDF.js library not available. Please check your network connection.");
+      }
+    }
+
+    if (pdfjsLib.GlobalWorkerOptions) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+
+    let fullText = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      fullText += content.items.map(function(item) { return item.str; }).join(" ") + "\n";
+    }
+
+    const urlRegex = /(https?:\/\/[^\s)>\]"']+)/g;
+    const matches = [...fullText.matchAll(urlRegex)];
+    return matches.map(function(m) {
+      const url = m[0];
+      const pre = fullText.substring(Math.max(0, m.index - 60), m.index).trim();
+      const titleWords = pre.split(/\s+/).slice(-4).join(" ").replace(/[^a-zA-Z0-9 .\/:_-]/g, "").trim();
+      return { title: titleWords || "Extracted Link", url: url, description: "Extracted from PDF", category: "PDF Imports" };
+    });
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // IMPORT HANDLERS
+  // ════════════════════════════════════════════════════════════════
+  function handleDrop(event) {
+    event.preventDefault();
+    document.getElementById("dropzone").classList.remove("drag-over");
+    const file = event.dataTransfer.files[0];
+    if (file) processFile(file);
+  }
+
+  function handleFileInput(event) {
+    const file = event.target.files[0];
+    event.target.value = "";
+    if (file) processFile(file);
+  }
+
+  async function processFile(file) {
+    const btn = document.getElementById("browse-btn");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Processing…';
+
+    try {
+      let parsed = [];
+      if (file.name.endsWith(".csv")) {
+        parsed = parseCsv(await file.text());
+      } else if (file.name.endsWith(".txt")) {
+        parsed = parseTxt(await file.text());
+      } else if (file.name.endsWith(".pdf")) {
+        parsed = await parsePdf(file);
+      } else {
+        toast("Unsupported file type. Use CSV, TXT, or PDF.", true);
+        return;
+      }
+
+      if (parsed.length === 0) {
+        toast("No entries could be parsed from this file.", true);
+        return;
+      }
+
+      pendingImport = parsed;
+      renderImportPreview();
+    } catch (err) {
+      console.error(err);
+      toast("Failed to parse file: " + err.message, true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Browse Files";
+    }
+  }
+
+  function renderImportPreview() {
+    const root = document.getElementById("import-preview-root");
+    const shown = pendingImport.slice(0, 5);
+    const extra = pendingImport.length - 5;
+
+    let listHtml = shown.map(function(e) {
+      return '<div class="import-preview-item">' +
+        '<div>' +
+        '<div class="item-title">' + esc(e.title) + '</div>' +
+        '<div class="item-url">' + esc(e.url) + '</div>' +
+        '</div>' +
+        '<span class="badge">' + esc(e.category) + '</span>' +
+        '</div>';
+    }).join("");
+
+    root.innerHTML = 
+      '<div class="import-preview">' +
+      '<div class="import-preview-header">' +
+      'Import Preview' +
+      '<span class="badge">' + pendingImport.length + ' entries found</span>' +
+      '</div>' +
+      '<div class="import-preview-list">' + listHtml + '</div>' +
+      (extra > 0 ? '<div class="import-more">…and ' + extra + ' more</div>' : "") +
+      '</div>' +
+      '<div class="import-actions mt-2">' +
+      '<button class="btn btn-primary" onclick="confirmImport()">Confirm Import (' + pendingImport.length + ')</button>' +
+      '<button class="btn btn-outline" onclick="cancelImport()">Cancel</button>' +
+      '</div>';
+  }
+
+  function confirmImport() {
+    const withIds = pendingImport.map(function(e) { return { id: uuid(), title: e.title, url: e.url, description: e.description, category: e.category }; });
+    entries = entries.concat(withIds);
+    saveEntries();
+    pendingImport = [];
+    document.getElementById("import-preview-root").innerHTML = "";
+    renderEntryList();
+    renderPreview();
+    updateClearBtn();
+    toast("Imported " + withIds.length + " entries.");
+    switchTab("entries", document.querySelectorAll(".tab-btn")[0]);
+  }
+
+  function cancelImport() {
+    pendingImport = [];
+    document.getElementById("import-preview-root").innerHTML = "";
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // TEMPLATE
+  // ════════════════════════════════════════════════════════════════
+  async function loadTemplateFile(event) {
+    const file = event.target.files[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      const text = await file.text();
+      document.getElementById("template-editor").value = text;
+      saveTemplateToStorage();
+      renderPreview();
+      toast("Template loaded: " + file.name);
+    } catch {
+      toast("Could not read file.", true);
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // GENERATOR
+  // ════════════════════════════════════════════════════════════════
+  function generateMarkdown() {
+    if (entries.length === 0 && !document.getElementById("template-editor").value.trim()) return "";
+
+    const template = document.getElementById("template-editor").value;
+    const categorized = {};
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i];
+      if (!categorized[e.category]) categorized[e.category] = [];
+      categorized[e.category].push(e);
+    }
+    for (const cat in categorized) {
+      if (categorized.hasOwnProperty(cat)) {
+        categorized[cat].sort(function(a,b) { return a.title.localeCompare(b.title); });
+      }
+    }
+
+    const lines = template.split("\n");
+    let output = "";
+    const placed = new Set();
+    const headingRx = /^(#{1,6})\s+(.*)$/;
+    const emojiRx = /[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}]/gu;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      output += line + "\n";
+      const m = line.match(headingRx);
+      if (m) {
+        const rawHeading = m[2].trim();
+        const stripped   = rawHeading.replace(emojiRx, "").trim();
+
+        const matchedCat = Object.keys(categorized).find(function(c) {
+          return c.toLowerCase() === stripped.toLowerCase() ||
+                 c.toLowerCase() === rawHeading.toLowerCase();
+        });
+
+        if (matchedCat) {
+          placed.add(matchedCat);
+          output += "\n";
+          for (let j = 0; j < categorized[matchedCat].length; j++) {
+            const e = categorized[matchedCat][j];
+            const desc = e.description ? " — " + e.description : "";
+            output += "- [" + e.title + "](" + e.url + ")" + desc + "\n";
+          }
+          output += "\n";
+        }
+      }
+    }
+
+    const unplaced = Object.keys(categorized).filter(function(c) { return !placed.has(c); });
+    if (unplaced.length > 0) {
+      output += "\n## Other Additions\n\n";
+      for (let i = 0; i < unplaced.length; i++) {
+        const cat = unplaced[i];
+        output += "### " + cat + "\n\n";
+        for (let j = 0; j < categorized[cat].length; j++) {
+          const e = categorized[cat][j];
+          const desc = e.description ? " — " + e.description : "";
+          output += "- [" + e.title + "](" + e.url + ")" + desc + "\n";
+        }
+        output += "\n";
+      }
+    }
+
+    return output.trim();
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // PREVIEW
+  // ════════════════════════════════════════════════════════════════
+  function renderPreview() {
+    const md = generateMarkdown();
+    const html = window.marked ? window.marked.parse(md || "*Add entries and a template to generate your awesome list.*") : md;
+    document.getElementById("md-preview").innerHTML = html;
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // EXPORT HELPERS
+  // ════════════════════════════════════════════════════════════════
+  function download(content, filename, mime) {
+    const blob = new Blob([content], { type: mime });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function escapeCsvField(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }
+
+  function copyMd() {
+    const md = generateMarkdown();
+    navigator.clipboard.writeText(md).then(function() {
+      toast("Markdown copied to clipboard!");
+    }).catch(function() {
+      toast("Clipboard access denied.", true);
+    });
+  }
+
+  function exportMd() {
+    if (!entries.length) { toast("No entries to export.", true); return; }
+    download(generateMarkdown(), "README.md", "text/markdown;charset=utf-8;");
+    toast("README.md downloaded.");
+  }
+
+  function exportCsv() {
+    if (!entries.length) { toast("No entries to export.", true); return; }
+    const header = '"Title","URL","Description","Category"\n';
+    const rows   = entries.map(function(e) {
+      return [e.title, e.url, e.description, e.category].map(escapeCsvField).join(",");
+    }).join("\n");
+    download(header + rows, "awesome-list.csv", "text/csv;charset=utf-8;");
+    toast("CSV downloaded.");
+  }
+
+  function exportHtml() {
+    if (!entries.length) { toast("No entries to export.", true); return; }
+    const md = generateMarkdown();
+    const html = '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <meta name="viewport" content="width=device-width,initial-scale=1"/>\n  <title>Awesome List</title>\n  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>\n  <style>\n    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6;color:#24292f;background:#f6f8fa;max-width:860px;margin:0 auto;padding:2.5rem 2rem}\n    h1{font-size:2em;font-weight:700;border-bottom:1px solid #d0d7de;padding-bottom:.3em;margin-bottom:.8em}\n    h2{font-size:1.5em;font-weight:600;border-bottom:1px solid #d0d7de;padding-bottom:.3em;margin:1.4em 0 .6em}\n    h3{font-size:1.25em;font-weight:600;margin:1.2em 0 .5em}\n    p{margin-bottom:.8em}ul{padding-left:1.4em;margin-bottom:.8em}li{margin-bottom:.35em}\n    a{color:#0969da;text-decoration:none}a:hover{text-decoration:underline}\n    blockquote{border-left:4px solid #d0d7de;padding-left:1em;color:#57606a;margin:.8em 0}\n  </style>\n</head>\n<body>\n  <div id="c"></div>\n  <script>document.getElementById("c").innerHTML=marked.parse(' + JSON.stringify(md).replace(/</g, "\u003c") + ')<\/script>\n</body>\n</html>';
+    download(html, "awesome-list.html", "text/html;charset=utf-8;");
+    toast("HTML file downloaded.");
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // EVENT LISTENERS (attached after DOM ready)
+  // ════════════════════════════════════════════════════════════════
+  document.addEventListener("DOMContentLoaded", function() {
+    // Init state
+    entries = loadEntries();
+    document.getElementById("template-editor").value = loadTemplate();
+
+    // Tab buttons
+    document.querySelectorAll(".tab-btn").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        switchTab(btn.dataset.tab, btn);
+      });
+    });
+
+    // Add entry button
+    document.getElementById("btn-add-entry").addEventListener("click", addEntry);
+
+    // Clear data button
+    document.getElementById("btn-clear").addEventListener("click", clearAllData);
+
+    // Template file load
+    document.getElementById("btn-load-template").addEventListener("click", function() {
+      document.getElementById("template-file-input").click();
+    });
+    document.getElementById("template-file-input").addEventListener("change", loadTemplateFile);
+
+    // Template editor
+    document.getElementById("template-editor").addEventListener("input", function() {
+      saveTemplateToStorage();
+      renderPreview();
+    });
+
+    // Dropzone
+    const dropzone = document.getElementById("dropzone");
+    dropzone.addEventListener("dragover", function(event) {
+      event.preventDefault();
+      dropzone.classList.add("drag-over");
+    });
+    dropzone.addEventListener("dragleave", function() {
+      dropzone.classList.remove("drag-over");
+    });
+    dropzone.addEventListener("drop", handleDrop);
+
+    // Browse button
+    document.getElementById("browse-btn").addEventListener("click", function() {
+      document.getElementById("file-input").click();
+    });
+    document.getElementById("file-input").addEventListener("change", handleFileInput);
+
+    // Export buttons
+    document.getElementById("btn-copy-md").addEventListener("click", copyMd);
+    document.getElementById("btn-export-md").addEventListener("click", exportMd);
+    document.getElementById("btn-export-csv").addEventListener("click", exportCsv);
+    document.getElementById("btn-export-html").addEventListener("click", exportHtml);
+
+    // Enter key shortcut in form
+    ["f-title", "f-url", "f-desc"].forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener("keydown", function(e) {
+          if (e.key === "Enter") { e.preventDefault(); addEntry(); }
+        });
+      }
+    });
+
+    // Initial render
+    renderEntryList();
+    renderPreview();
+    updateClearBtn();
+  });
+</script>
 </body>
 </html>
